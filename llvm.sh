@@ -10,10 +10,10 @@
 
 set -eux
 
-CURRENT_LLVM_STABLE=14
+CURRENT_LLVM_STABLE=13
 
 # Check for required tools
-needed_binaries=(lsb_release wget add-apt-repository)
+needed_binaries=(lsb_release wget gpg add-apt-repository)
 missing_binaries=()
 for binary in "${needed_binaries[@]}"; do
     if ! which $binary &>/dev/null ; then
@@ -22,8 +22,9 @@ for binary in "${needed_binaries[@]}"; do
 done
 if [[ ${#missing_binaries[@]} -gt 0 ]] ; then
     echo "You are missing some tools this script requires: ${missing_binaries[@]}"
-    echo "(hint: apt install lsb-release wget software-properties-common)"
-    exit 4
+    echo "(hint: apt install lsb-release wget gpg software-properties-common)"
+    apt-get update -y && \
+    apt-get install -y lsb-release wget gpg software-properties-common
 fi
 
 # read optional command line argument
@@ -70,27 +71,30 @@ fi
 
 LLVM_VERSION_STRING=${LLVM_VERSION_PATTERNS[$LLVM_VERSION]}
 
+llvm_gpg_keyring=/usr/share/keyrings/llvm-archive-keyring.gpg
+llvm_gpg_signature="[arch=$(dpkg --print-architecture) signed-by=$llvm_gpg_keyring]"
+
 # find the right repository name for the distro and version
 case "$DIST_VERSION" in
-    Debian_9* )       REPO_NAME="deb http://apt.llvm.org/stretch/  llvm-toolchain-stretch$LLVM_VERSION_STRING main" ;;
-    Debian_10* )      REPO_NAME="deb http://apt.llvm.org/buster/   llvm-toolchain-buster$LLVM_VERSION_STRING  main" ;;
-    Debian_11* )      REPO_NAME="deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye$LLVM_VERSION_STRING  main" ;;
-    Debian_unstable ) REPO_NAME="deb http://apt.llvm.org/unstable/ llvm-toolchain$LLVM_VERSION_STRING         main" ;;
-    Debian_testing )  REPO_NAME="deb http://apt.llvm.org/unstable/ llvm-toolchain$LLVM_VERSION_STRING         main" ;;
+    Debian_9* )       REPO_NAME="deb $llvm_gpg_signature https://apt.llvm.org/stretch/  llvm-toolchain-stretch$LLVM_VERSION_STRING main" ;;
+    Debian_10* )      REPO_NAME="deb $llvm_gpg_signature https://apt.llvm.org/buster/   llvm-toolchain-buster$LLVM_VERSION_STRING  main" ;;
+    Debian_11* )      REPO_NAME="deb $llvm_gpg_signature https://apt.llvm.org/bullseye/ llvm-toolchain-bullseye$LLVM_VERSION_STRING  main" ;;
+    Debian_unstable ) REPO_NAME="deb $llvm_gpg_signature https://apt.llvm.org/unstable/ llvm-toolchain$LLVM_VERSION_STRING         main" ;;
+    Debian_testing )  REPO_NAME="deb $llvm_gpg_signature https://apt.llvm.org/unstable/ llvm-toolchain$LLVM_VERSION_STRING         main" ;;
 
-    Ubuntu_16.04 )    REPO_NAME="deb http://apt.llvm.org/xenial/   llvm-toolchain-xenial$LLVM_VERSION_STRING  main" ;;
-    Ubuntu_18.04 )    REPO_NAME="deb http://apt.llvm.org/bionic/   llvm-toolchain-bionic$LLVM_VERSION_STRING  main" ;;
-    Ubuntu_18.10 )    REPO_NAME="deb http://apt.llvm.org/cosmic/   llvm-toolchain-cosmic$LLVM_VERSION_STRING  main" ;;
-    Ubuntu_19.04 )    REPO_NAME="deb http://apt.llvm.org/disco/    llvm-toolchain-disco$LLVM_VERSION_STRING   main" ;;
-    Ubuntu_19.10 )   REPO_NAME="deb http://apt.llvm.org/eoan/      llvm-toolchain-eoan$LLVM_VERSION_STRING    main" ;;
-    Ubuntu_20.04 )   REPO_NAME="deb http://apt.llvm.org/focal/     llvm-toolchain-focal$LLVM_VERSION_STRING   main" ;;
-    Ubuntu_20.10 )   REPO_NAME="deb http://apt.llvm.org/groovy/    llvm-toolchain-groovy$LLVM_VERSION_STRING  main" ;;
-    Ubuntu_21.04 )   REPO_NAME="deb http://apt.llvm.org/hirsute/   llvm-toolchain-hirsute$LLVM_VERSION_STRING main" ;;
-    Ubuntu_21.10 )   REPO_NAME="deb http://apt.llvm.org/impish/    llvm-toolchain-impish$LLVM_VERSION_STRING main" ;;
-    Ubuntu_22.04 )   REPO_NAME="deb http://apt.llvm.org/jammy/     llvm-toolchain-jammy$LLVM_VERSION_STRING main" ;;
+    Ubuntu_16.04 )    REPO_NAME="deb $llvm_gpg_signature https://apt.llvm.org/xenial/   llvm-toolchain-xenial$LLVM_VERSION_STRING  main" ;;
+    Ubuntu_18.04 )    REPO_NAME="deb $llvm_gpg_signature https://apt.llvm.org/bionic/   llvm-toolchain-bionic$LLVM_VERSION_STRING  main" ;;
+    Ubuntu_18.10 )    REPO_NAME="deb $llvm_gpg_signature https://apt.llvm.org/cosmic/   llvm-toolchain-cosmic$LLVM_VERSION_STRING  main" ;;
+    Ubuntu_19.04 )    REPO_NAME="deb $llvm_gpg_signature https://apt.llvm.org/disco/    llvm-toolchain-disco$LLVM_VERSION_STRING   main" ;;
+    Ubuntu_19.10 )   REPO_NAME="deb $llvm_gpg_signature https://apt.llvm.org/eoan/      llvm-toolchain-eoan$LLVM_VERSION_STRING    main" ;;
+    Ubuntu_20.04 )   REPO_NAME="deb $llvm_gpg_signature https://apt.llvm.org/focal/     llvm-toolchain-focal$LLVM_VERSION_STRING   main" ;;
+    Ubuntu_20.10 )   REPO_NAME="deb $llvm_gpg_signature https://apt.llvm.org/groovy/    llvm-toolchain-groovy$LLVM_VERSION_STRING  main" ;;
+    Ubuntu_21.04 )   REPO_NAME="deb $llvm_gpg_signature https://apt.llvm.org/hirsute/   llvm-toolchain-hirsute$LLVM_VERSION_STRING main" ;;
+    Ubuntu_21.10 )   REPO_NAME="deb $llvm_gpg_signature https://apt.llvm.org/impish/    llvm-toolchain-impish$LLVM_VERSION_STRING main" ;;
+    Ubuntu_22.04 )   REPO_NAME="deb $llvm_gpg_signature https://apt.llvm.org/jammy/     llvm-toolchain-jammy$LLVM_VERSION_STRING main" ;;
 
-    Linuxmint_19* )  REPO_NAME="deb http://apt.llvm.org/bionic/   llvm-toolchain-bionic$LLVM_VERSION_STRING  main" ;;
-    Linuxmint_20* )  REPO_NAME="deb http://apt.llvm.org/focal/    llvm-toolchain-focal$LLVM_VERSION_STRING   main" ;;
+    Linuxmint_19* )  REPO_NAME="deb $llvm_gpg_signature https://apt.llvm.org/bionic/   llvm-toolchain-bionic$LLVM_VERSION_STRING  main" ;;
+    Linuxmint_20* )  REPO_NAME="deb $llvm_gpg_signature https://apt.llvm.org/focal/    llvm-toolchain-focal$LLVM_VERSION_STRING   main" ;;
 
     * )
     echo "Distribution '$DISTRO' in version '$VERSION' is not supported by this script (${DIST_VERSION})."
@@ -99,13 +103,29 @@ esac
 
 
 # install everything
-wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-add-apt-repository "${REPO_NAME}"
-apt-get update
-PKG="clang-$LLVM_VERSION lldb-$LLVM_VERSION lld-$LLVM_VERSION clangd-$LLVM_VERSION"
+wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --yes --dearmor -o $llvm_gpg_keyring
+echo "${REPO_NAME}" | tee /etc/apt/sources.list.d/llvm.list > /dev/null
+apt-get update -y
+PKG="clang-$LLVM_VERSION lld-$LLVM_VERSION"
 if [[ $ALL -eq 1 ]]; then
     # same as in test-install.sh
     # No worries if we have dups
     PKG="$PKG clang-tidy-$LLVM_VERSION clang-format-$LLVM_VERSION clang-tools-$LLVM_VERSION llvm-$LLVM_VERSION-dev lld-$LLVM_VERSION lldb-$LLVM_VERSION llvm-$LLVM_VERSION-tools libomp-$LLVM_VERSION-dev libc++-$LLVM_VERSION-dev libc++abi-$LLVM_VERSION-dev libclang-common-$LLVM_VERSION-dev libclang-$LLVM_VERSION-dev libclang-cpp$LLVM_VERSION-dev libunwind-$LLVM_VERSION-dev"
 fi
 apt-get install -y $PKG
+# remove unnecessary packages
+apt-get remove -y build-essential g++ gcc && \
+apt-get autoremove -y
+
+update-alternatives --install /usr/bin/clang clang $(which clang-$LLVM_VERSION) 20
+update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang 20
+update-alternatives --install /usr/bin/lld lld $(which lld-$LLVM_VERSION) 20
+
+update-alternatives --set clang $(which clang-$LLVM_VERSION)
+update-alternatives --set lld $(which lld-$LLVM_VERSION)
+
+echo "Clang detection:"
+clang --version
+
+echo "Linker detection:"
+clang -fuse-ld=lld -Wl,--version
